@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <title>WordWise</title>
+    <style>
+        /* Paste the CSS code here */
+        body {
+            font-family: 'Helvetica Neue', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #060606; /* A warm off-white background */
+            color: #444;  /* Softer text color for coziness */
+            background-image: url('fireplace.jpg'); /* Optional: a fireplace image for a cozy touch */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        .header-container {
+            padding: 20px;
+            background-color: #556270; /* A subdued, elegant blue-grey */
+            color: #FFF8E7; /* Soft off-white, reminiscent of parchment */
+            text-align: center;
+            border-top-left-radius: 8px; /* Match the container's border-radius */
+            border-top-right-radius: 8px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 2.5em; /* Slightly larger for impact */
+            font-family: 'Playfair Display', serif; /* A font with a literary feel */
+            color: #ffd700; /* Gold color */
+            text-shadow: 0 0 8px rgba(255, 215, 0, 0.6); /* Soft golden glow effect */
+        }
+.chat-container {
+    width: 80%;
+    max-width: 800px;
+    height: 80vh;
+    margin: auto;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+    background-color: rgba(0, 0, 0, 0.85); /* Light background for chat */
+    display: flex;
+    flex-direction: column;
+}
+
+        .chat-box {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .chat-message {
+    margin-bottom: 16px;
+    background-color: rgba(246, 245, 242, 1); /* Message bubble background */
+    padding: 15px 20px;
+    border-radius: 18px;
+    max-width: calc(100% - 40px);
+    word-wrap: break-word; /* Ensure messages do not overflow */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.sent {
+    background-color: #81a4a9; /* Softer shade for sent messages */
+    color: #fff;
+    align-self: flex-end;
+    border-bottom-right-radius: 4px; /* Stylistic choice for sent messages */
+}
+
+.input-container {
+    padding: 16px;
+    background-color: rgba(0, 0, 0, 0.95); /* Slightly opaque input area */
+    border-top: 1px solid #d3d8de; /* Light border for a touch of contrast */
+    display: flex;
+    align-items: center;
+}
+
+
+        .input-container {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.9); /* Semi-transparent input container */
+            border-top: 2px solid #007bff;
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
+        }
+
+        input[type="text"] {
+    flex: 1;
+    margin-right: 16px;
+    padding: 12px 20px;
+    border: 1px solid #c4c9cf;
+    border-radius: 24px;
+    outline: none; /* Disable browser default focus outline */
+    font-size: 16px;
+    background-color: #fff; /* White background for maximum contrast */
+    color: #5a5d60; /* Darker text color for readability */
+}
+
+       
+button {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 24px;
+    background-color: #4A90E2; /* Calming button color */
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.2s;
+}
+
+button:hover {
+    background-color: #4285C8; /* Slightly darker on hover for feedback */
+}
+
+
+    </style>
+</head>
+<body>
+    
+    <div class="chat-container">
+        <div class="chat-box">
+            <!-- <div class="chat-message received">
+                <p>Type something...</p>
+            </div> -->
+            <div class="chat-message sent">
+                <p>{{ ai_response }}</p>
+            </div>
+            <!-- Add more messages as needed -->
+        </div>
+        <div class="input-container">
+            <input type="text" placeholder="Start writing here...">
+            <button>Send</button>
+            <div class="header-container">
+                <h1>WordWise</h1>
+            </div>
+        </div>
+
+        <!-- ... (your existing HTML code) ... -->
+<script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const button = document.querySelector('button');
+                const input = document.querySelector('input[type="text"]');
+                const chatBox = document.querySelector('.chat-box');
+                let conversation = []; // Track the conversation messages
+                let chatContent = document.querySelector('.chat-message.received p');
+
+                button.addEventListener('click', sendMessage);
+                input.addEventListener('keypress', function (event) {
+                    if (event.key === 'Enter') {
+                        sendMessage();
+                    }
+                });
+
+                function sendMessage() {
+                    const message = input.value.trim();
+                    if (message !== '') {
+                        conversation.push({ role: 'sent', content: message });
+
+                        fetch('/chat', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                            },
+                            body: `user_input=${encodeURIComponent(message)}`
+                        })
+                            .then(response => response.text())
+                            .then(data => {
+                                conversation.push({ role: 'received', content: data });
+                                renderConversation();
+                            })
+                            .catch(error => {
+                                console.error('Error:', error);
+                            });
+
+                        input.value = '';
+                    }
+                }
+                function renderConversation() {
+            chatBox.innerHTML = ''; // Clear the chat box
+            conversation.forEach(message => {
+                const chatMessage = document.createElement('div');
+                chatMessage.classList.add('chat-message', message.role);
+                chatMessage.innerHTML = `<p>${message.content}</p>`;
+                chatMessage.textContent = conversation.map(message => message.content)
+            });
+        }
+    //             function renderConversation() {
+    //                 chatContent.innerHTML = ''; // Clear the chat content
+    //                 conversation.forEach(message => {
+    //                     chatMessage.classList.add('chat-message', message.role);
+    //                     chatMessage.innerHTML = `<p>${message.content}</p>`;
+    //             chatBox.appendChild(chatMessage);
+    // });
+    //                 //     chatMessage.classList.add('chat-message', message.role);
+    //                 //     chatMessage.innerHTML = `<p>${message.content}</p>`;
+    //                 //     chatBox.appendChild(chatMessage);
+    //                 // chatContent.textContent = conversation.map(message => message.content)
+    //             }
+            });
+        </script>
+        <!-- Your existing HTML code -->
+<!-- Your existing HTML code -->
+<!-- <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const button = document.querySelector('button');
+        const input = document.querySelector('input[type="text"]');
+        const chatBox = document.querySelector('.chat-box');
+        let conversation = []; // Track the conversation messages
+
+        button.addEventListener('click', sendMessage);
+        input.addEventListener('keypress', function (event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        function sendMessage() {
+            const message = input.value.trim();
+            if (message !== '') {
+                conversation.push({ role: 'sent', content: message });
+
+                fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `user_input=${encodeURIComponent(message)}`
+                })
+                    .then(response => response.text())
+                    .then(data => {
+                        conversation.push({ role: 'received', content: data });
+                        renderConversation();
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+            }
+            input.value = '';
+        }
+
+        function renderConversation() {
+            chatBox.innerHTML = ''; // Clear the chat box
+            conversation.forEach(message => {
+                const chatMessage = document.createElement('div');
+                chatMessage.classList.add('chat-message', message.role);
+                chatMessage.innerHTML = `<p>${message.content}</p>`;
+                chatBox.appendChild(chatMessage);
+            });
+        }
+    });
+</script> -->
+<!-- <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const button = document.querySelector('button');
+        const input = document.querySelector('input[type="text"]');
+        const chatBox = document.querySelector('.chat-box');
+        let conversation = []; // Track the conversation messages
+
+        button.addEventListener('click', sendMessage);
+        input.addEventListener('keypress', function (event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        function sendMessage() {
+            const message = input.value.trim();
+            if (message !== '') {
+                conversation.push({ role: 'sent', content: message });
+
+                fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `user_input=${encodeURIComponent(message)}`
+                })
+                    .then(response => response.text())
+                    .then(data => {
+                        conversation.push({ role: 'received', content: data });
+                        renderConversation();
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+            }
+            input.value = '';
+        }
+
+        function renderConversation() {
+            chatBox.innerHTML = ''; // Clear the chat box
+            conversation.forEach(message => {
+                const chatMessage = document.createElement('div');
+                chatMessage.classList.add('chat-message', message.role);
+                chatMessage.innerHTML = `<p>${message.content}</p>`;
+                chatBox.appendChild(chatMessage);
+            });
+        }
+    });
+</script> -->
+<!-- Remaining HTML content -->
+
+<!-- Remaining HTML content -->
+
+
+    </div>
+</body>
+</html>
