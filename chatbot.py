@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, jsonify
 from openai import OpenAI
 
 app = Flask(__name__)
-OPENAI_API_KEY = "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"
+OPENAI_API_KEY = "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"
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 
